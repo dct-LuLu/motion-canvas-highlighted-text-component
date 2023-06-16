@@ -1,7 +1,7 @@
 {
   "version": 0,
   "shared": {
-    "background": null,
+    "background": "rgb(35,35,35)",
     "range": [
       0,
       null
@@ -21,11 +21,10 @@
     "resolutionScale": 1,
     "colorSpace": "srgb",
     "exporter": {
-      "name": "image sequence",
+      "name": "@motion-canvas/ffmpeg",
       "options": {
-        "fileType": "image/png",
-        "quality": 100,
-        "groupByScene": false
+        "fastStart": true,
+        "includeAudio": true
       }
     }
   }

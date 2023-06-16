@@ -13,7 +13,7 @@ const config = [
     output: {
       file: 'lib/bundle.js',
       format: 'umd',
-      name: 'MyFirstMotionCanvasLibrary',
+      name: 'MotionCanvasHighlightedTextComponent',
     },
     plugins: [externals(), typescript(), minify && terser()],
     external: [/^@motion-canvas\/core/, /^@motion-canvas\/2d/],
