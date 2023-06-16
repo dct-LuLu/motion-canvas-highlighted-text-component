@@ -17,6 +17,9 @@ export interface HighlightedProps extends NodeProps {
   fill: SignalValue<PossibleCanvasStyle>;
   fill2?: SignalValue<PossibleCanvasStyle>;
   adaptiveHeight?: boolean;
+  heightFix?: number;
+  heightPadding?: number;
+  widthPadding?: number;
 };
 
 
@@ -24,16 +27,18 @@ export interface HighlightedProps extends NodeProps {
 export class HighlightedTxt extends Node {
 
   protected getConstantCharacterSize(font: string, fontSize: number, content: string): { width: number, height: number } {
+    if (content.length === 0) return { width: 0, height: 0 };
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     ctx.font = `${fontSize}px ${font}`;
-    const width = ctx.measureText(content).width;
+    let width = ctx.measureText(content).width;   
     const metrics = ctx.measureText("|");
     const height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+    console.log("width: " + width + " height: " + height);
     return { width, height };
   }
 
-  //@initial(null)
+
   @signal()
   public declare readonly text: SimpleSignal<string, this>;
 
@@ -60,9 +65,25 @@ export class HighlightedTxt extends Node {
   @canvasStyleSignal()
   public declare readonly fill: SimpleSignal<string, this>;
 
-  //@initial(null)
   @canvasStyleSignal()
   public declare readonly fill2: SimpleSignal<string, this>;
+
+  @initial(true)
+  @signal()
+  public declare readonly adaptiveHeight: SimpleSignal<boolean, this>;
+
+  @initial(5)//7
+  @signal()
+  public declare readonly heightFix: SimpleSignal<number, this>;
+
+  @signal()
+  public declare readonly heightPadding: SimpleSignal<number, this>;
+
+  @signal()
+  public declare readonly widthPadding: SimpleSignal<number, this>;
+
+  public textRef = createRef<Txt>();
+  public highlightRef = createRef<Rect>();
 
 
   public constructor(props: HighlightedProps) {
@@ -70,25 +91,27 @@ export class HighlightedTxt extends Node {
       ...props
     });
 
+    this.heightPadding = createSignal(() => this.fontSize() * 0.4);
+    this.widthPadding = createSignal(() => this.fontSize() * 0.4);
 
     this.add(
       <>
       <Rect
+        ref={this.highlightRef}
         fill={this.fill2() ?? this.fill}
-        radius={this.roundedCorners ? 20 : 0}
+        radius={this.roundedCorners() ? 20 : 0}
         opacity={this.highlightOpacity}
-        //position={this.position}
-        width={createSignal(this.getConstantCharacterSize(this.fontFamily(), this.fontSize(), this.text()).width+30)}
-        height={this.getConstantCharacterSize(this.fontFamily(), this.fontSize(), this.text()).height+30}
+        width={() => this.text().length === 0 ? 0 : this.getConstantCharacterSize(this.fontFamily(), this.fontSize(), this.text()).width + this.widthPadding()}
+        height={() => this.text().length === 0 ? 0 : this.getConstantCharacterSize(this.fontFamily(), this.fontSize(), this.text()).height+this.heightPadding()}
         />,
       <Txt
+        ref={this.textRef}
         fill={this.fill}
         fontFamily={this.fontFamily()}
         fontSize={this.fontSize}
         text={this.text}
-        //position={this.position}
         opacity={this.textOpacity}
-        y={4}
+        y={this.adaptiveHeight() ? this.heightFix : 0}
       />
       </>
     );
