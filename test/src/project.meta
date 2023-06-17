@@ -4,7 +4,7 @@
     "background": "rgb(35,35,35)",
     "range": [
       0,
-      null
+      21.6
     ],
     "size": {
       "x": 1920,
@@ -18,13 +18,14 @@
   },
   "rendering": {
     "fps": 60,
-    "resolutionScale": 1,
+    "resolutionScale": 2,
     "colorSpace": "srgb",
     "exporter": {
-      "name": "@motion-canvas/ffmpeg",
+      "name": "@motion-canvas/core/image-sequence",
       "options": {
-        "fastStart": true,
-        "includeAudio": true
+        "fileType": "image/png",
+        "quality": 100,
+        "groupByScene": false
       }
     }
   }

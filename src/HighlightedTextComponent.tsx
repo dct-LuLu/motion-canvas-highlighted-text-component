@@ -1,10 +1,7 @@
-import { initial, signal, colorSignal, canvasStyleSignal } from "@motion-canvas/2d/lib/decorators";
+import { initial, signal, canvasStyleSignal } from "@motion-canvas/2d/lib/decorators";
 import { SignalValue, SimpleSignal, createSignal } from "@motion-canvas/core/lib/signals";
-import { cancel, ThreadGenerator } from "@motion-canvas/core/lib/threading";
-import { Reference, createRef } from "@motion-canvas/core/lib/utils";
-import { loop, waitFor } from "@motion-canvas/core/lib/flow";
-import { InterpolationFunction, TimingFunction } from "@motion-canvas/core/lib/tweening";
-import { Txt, Rect, RectProps, TxtProps, NodeProps, Node } from "@motion-canvas/2d/lib/components";
+import { createRef } from "@motion-canvas/core/lib/utils";
+import { Txt, Rect, NodeProps, Node } from "@motion-canvas/2d/lib/components";
 import { PossibleCanvasStyle } from "@motion-canvas/2d/lib/partials";
 
 export interface HighlightedProps extends NodeProps {
@@ -20,21 +17,21 @@ export interface HighlightedProps extends NodeProps {
   heightFix?: number;
   heightPadding?: number;
   widthPadding?: number;
+  outlined?: boolean;
 };
 
 
 
 export class HighlightedTxt extends Node {
 
+  private static ctx: CanvasRenderingContext2D = document.createElement('canvas').getContext('2d');
+
   protected getConstantCharacterSize(font: string, fontSize: number, content: string): { width: number, height: number } {
     if (content.length === 0) return { width: 0, height: 0 };
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.font = `${fontSize}px ${font}`;
-    let width = ctx.measureText(content).width;   
-    const metrics = ctx.measureText("|");
+    HighlightedTxt.ctx.font = `${fontSize}px ${font}`;
+    const width = HighlightedTxt.ctx.measureText(content).width;
+    const metrics = HighlightedTxt.ctx.measureText("|");
     const height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
-    console.log("width: " + width + " height: " + height);
     return { width, height };
   }
 
@@ -72,7 +69,7 @@ export class HighlightedTxt extends Node {
   @signal()
   public declare readonly adaptiveHeight: SimpleSignal<boolean, this>;
 
-  @initial(5)//7
+  @initial(5)
   @signal()
   public declare readonly heightFix: SimpleSignal<number, this>;
 
@@ -82,8 +79,9 @@ export class HighlightedTxt extends Node {
   @signal()
   public declare readonly widthPadding: SimpleSignal<number, this>;
 
-  public textRef = createRef<Txt>();
-  public highlightRef = createRef<Rect>();
+  @initial(false)
+  @signal()
+  public declare readonly outlined: SimpleSignal<boolean, this>;
 
 
   public constructor(props: HighlightedProps) {
@@ -97,21 +95,25 @@ export class HighlightedTxt extends Node {
     this.add(
       <>
       <Rect
-        ref={this.highlightRef}
-        fill={this.fill2() ?? this.fill}
-        radius={this.roundedCorners() ? 20 : 0}
-        opacity={this.highlightOpacity}
-        width={() => this.text().length === 0 ? 0 : this.getConstantCharacterSize(this.fontFamily(), this.fontSize(), this.text()).width + this.widthPadding()}
-        height={() => this.text().length === 0 ? 0 : this.getConstantCharacterSize(this.fontFamily(), this.fontSize(), this.text()).height+this.heightPadding()}
+        fill={() => {
+          if (this.outlined() === true) return null;
+          if (this.fill2() == undefined) return this.fill();
+          return this.fill2();
+        }}
+        radius={() => this.roundedCorners() ? 20 : 0}
+        opacity={() => this.text().length === 0 ? 0 : this.highlightOpacity()}
+        width={() => this.getConstantCharacterSize(this.fontFamily(), this.fontSize(), this.text()).width + this.widthPadding()}
+        height={() => this.getConstantCharacterSize(this.fontFamily(), this.fontSize(), this.text()).height+this.heightPadding()}
+        stroke={() => this.outlined() ? this.fill() : null}
+        lineWidth={() => this.outlined() ? 6 : null}
         />,
       <Txt
-        ref={this.textRef}
-        fill={this.fill}
-        fontFamily={this.fontFamily()}
-        fontSize={this.fontSize}
-        text={this.text}
-        opacity={this.textOpacity}
-        y={this.adaptiveHeight() ? this.heightFix : 0}
+        fill={() => this.fill()}
+        fontFamily={() => this.fontFamily()}
+        fontSize={() => this.fontSize()}
+        text={() => this.text()}
+        opacity={() => this.textOpacity()}
+        y={() => this.adaptiveHeight() ? this.heightFix() : 0}
       />
       </>
     );
