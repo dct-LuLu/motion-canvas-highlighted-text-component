@@ -1,7 +1,7 @@
 {
   "name": "@dct-lulu/motion-canvas-highlighted-text-component",
   "author": "Dct LuLu",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A highlighted text component",
   "scripts": {
     "prepare": "husky install",
